@@ -1,0 +1,29 @@
+services:
+  miruid:
+    build: .
+    container_name: miruid
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_VERSION: ${APP_VERSION:-0.1.0}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://ollama:11434/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-qwen2.5vl:7b}
+      ENABLE_PLAYGROUND: ${ENABLE_PLAYGROUND:-false}
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: miruid-ollama
+    profiles:
+      - local-llm
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
