@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 
+from app.api.error_handlers import register_exception_handlers
 from app.api.health import router as health_router
 from app.infrastructure.config import Settings, get_settings
 from app.infrastructure.logging import configure_logging
@@ -19,6 +20,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     if settings is not None:
         application.dependency_overrides[get_settings] = lambda: resolved_settings
 
+    register_exception_handlers(application)
     application.include_router(health_router)
     return application
 
