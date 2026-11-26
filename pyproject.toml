@@ -12,6 +12,7 @@ dependencies = [
     "opencv-python-headless>=4.10.0,<4.13.0",
     "pillow>=11.0.0",
     "pydantic-settings>=2.6.0",
+    "python-multipart>=0.0.12",
     "uvicorn[standard]>=0.32.0",
 ]
 
