@@ -18,7 +18,7 @@ from app.domain.exceptions import (
     ImageTooBlurryError,
     ProviderTimeoutError,
 )
-from app.domain.interfaces import ExtractionStrategy
+from app.domain.interfaces import DocumentClassifier, ExtractionStrategy
 from app.domain.registry import DocumentRegistry
 from app.domain.schemas import (
     ClassificationRule,
@@ -30,6 +30,7 @@ from app.domain.schemas import (
     ValidationResult,
 )
 from app.infrastructure.config import ApiSettings, OcrSettings, Settings
+from app.infrastructure.engines.classifier import HeuristicDocumentClassifier
 from app.infrastructure.engines.extractors import HybridOcrLlmExtractor
 from app.main import create_app
 
@@ -56,7 +57,11 @@ class DummyDocumentPlugin:
 
     @property
     def classification_rules(self) -> Sequence[ClassificationRule]:
-        return ()
+        return (
+            ClassificationRule(keyword="NIK", weight=2.0, required=True),
+            ClassificationRule(keyword="PROVINSI", weight=1.5),
+            ClassificationRule(keyword="SEUMUR HIDUP", weight=1.5),
+        )
 
     def build_prompt(self, ocr_result: OcrResult | None = None) -> str:
         if self._empty_prompt:
@@ -149,6 +154,8 @@ def _build_test_client(
     ocr_engine: FakeOcrEngine | None = None,
     llm_parser: FakeLlmParser | None = None,
     strategy: ExtractionStrategy | None = None,
+    classifier: DocumentClassifier | None = None,
+    enable_auto_classifier: bool = True,
     max_upload_size_mb: int = 10,
     register_dummy: bool = True,
 ) -> TestClient:
@@ -157,18 +164,26 @@ def _build_test_client(
     if register_dummy:
         registry.register(DummyDocumentPlugin())
 
+    resolved_ocr = ocr_engine if ocr_engine is not None else FakeOcrEngine()
     resolved_strategy = (
         strategy
         if strategy is not None
         else HybridOcrLlmExtractor(
-            ocr_engine=ocr_engine if ocr_engine is not None else FakeOcrEngine(),
+            ocr_engine=resolved_ocr,
             llm_parser=llm_parser if llm_parser is not None else FakeLlmParser(),
         )
+    )
+    resolved_classifier = (
+        classifier
+        if classifier is not None
+        else (HeuristicDocumentClassifier() if enable_auto_classifier else None)
     )
     pipeline = ExtractionPipeline(
         preprocessor=preprocessor if preprocessor is not None else FakePreprocessor(),
         strategy=resolved_strategy,
         registry=registry,
+        classifier=resolved_classifier,
+        ocr_engine=resolved_ocr,
     )
     settings = Settings(
         api=ApiSettings(max_upload_size_mb=max_upload_size_mb),
@@ -200,6 +215,7 @@ def test_extract_happy_path_with_custom_and_generated_request_id(
             "country_code": "IDN",
             "doc_type": "KTP",
             "confidence": 1.0,
+            "detected_automatically": False,
         }
         assert body["data"] == {
             "id_number": "3171234567890001",
@@ -392,3 +408,78 @@ async def test_hybrid_ocr_llm_extractor_raises_when_ocr_engine_missing() -> None
 
     with pytest.raises(ExtractionFailedError, match="OCR engine is not configured"):
         await extractor.extract(preprocessed, DummyDocumentPlugin())
+
+
+@pytest.mark.integration
+def test_extract_auto_detect_when_country_and_doc_type_omitted() -> None:
+    """Omitting country and doc_type auto-classifies and executes OCR exactly once."""
+    ocr = FakeOcrEngine(
+        raw_text="PROVINSI DKI JAKARTA\nNIK 3171234567890001\nNAMA BUDI SANTOSO\nSEUMUR HIDUP"
+    )
+    with _build_test_client(ocr_engine=ocr) as client:
+        response = client.post(
+            "/v1/extract",
+            files={"file": ("ktp.jpg", _make_sample_jpeg_bytes(), "image/jpeg")},
+            headers={"X-Request-ID": "req-auto-200"},
+        )
+
+    assert response.status_code == 200
+    assert ocr.call_count == 1
+    body = response.json()
+    assert body["success"] is True
+    assert body["document"]["country_code"] == "IDN"
+    assert body["document"]["doc_type"] == "KTP"
+    assert body["document"]["detected_automatically"] is True
+    assert body["document"]["confidence"] == pytest.approx(1.0)
+    assert body["meta"]["request_id"] == "req-auto-200"
+
+
+@pytest.mark.integration
+def test_extract_auto_detect_with_partial_country_hint() -> None:
+    """Providing only country narrows candidates and still auto-classifies with single OCR call."""
+    ocr = FakeOcrEngine(raw_text="PROVINSI DKI JAKARTA\nNIK 3171234567890001\nSEUMUR HIDUP")
+    with _build_test_client(ocr_engine=ocr) as client:
+        response = client.post(
+            "/v1/extract",
+            files={"file": ("ktp.jpg", _make_sample_jpeg_bytes(), "image/jpeg")},
+            data={"country": "IDN"},
+        )
+
+    assert response.status_code == 200
+    assert ocr.call_count == 1
+    body = response.json()
+    assert body["document"]["detected_automatically"] is True
+    assert body["document"]["country_code"] == "IDN"
+    assert body["document"]["doc_type"] == "KTP"
+
+
+@pytest.mark.integration
+def test_extract_auto_detect_returns_400_for_unrecognized_document() -> None:
+    """Auto-detection returns 400 UNSUPPORTED_DOCUMENT when OCR text matches no plugin."""
+    ocr = FakeOcrEngine(raw_text="SUPERMARKET RECEIPT\nTOTAL RP 42.000\nTHANK YOU")
+    with _build_test_client(ocr_engine=ocr) as client:
+        response = client.post(
+            "/v1/extract",
+            files={"file": ("receipt.jpg", _make_sample_jpeg_bytes(), "image/jpeg")},
+            headers={"X-Request-ID": "req-auto-400"},
+        )
+
+    assert response.status_code == 400
+    assert ocr.call_count == 1
+    body = response.json()
+    assert body["success"] is False
+    assert body["error_code"] == "UNSUPPORTED_DOCUMENT"
+    assert body["request_id"] == "req-auto-400"
+
+
+@pytest.mark.integration
+def test_extract_auto_detect_returns_400_when_classifier_unconfigured() -> None:
+    """Auto-detection fails cleanly with 400 UNSUPPORTED_DOCUMENT if no classifier is wired."""
+    with _build_test_client(enable_auto_classifier=False) as client:
+        response = client.post(
+            "/v1/extract",
+            files={"file": ("ktp.jpg", _make_sample_jpeg_bytes(), "image/jpeg")},
+        )
+
+    assert response.status_code == 400
+    assert response.json()["error_code"] == "UNSUPPORTED_DOCUMENT"

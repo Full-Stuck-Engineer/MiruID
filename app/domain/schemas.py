@@ -75,6 +75,7 @@ class DocumentInfo(BaseModel):
     country_code: str
     doc_type: str
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    detected_automatically: bool = False
 
 
 class ClassificationRule(BaseModel):

@@ -25,10 +25,10 @@ _BYTES_PER_MB = 1024 * 1024
 async def extract_document(
     request: Request,
     file: Annotated[UploadFile, File(...)],
-    country: Annotated[str, Form(...)],
-    doc_type: Annotated[str, Form(...)],
     pipeline: Annotated[ExtractionPipeline, Depends(get_pipeline)],
     settings: Annotated[Settings, Depends(get_settings)],
+    country: Annotated[str | None, Form()] = None,
+    doc_type: Annotated[str | None, Form()] = None,
     x_request_id: Annotated[str | None, Header(alias="X-Request-ID")] = None,
 ) -> ExtractionResponse[dict[str, Any]] | JSONResponse:
     """Extract and validate structured fields from an uploaded ID document image."""

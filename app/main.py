@@ -16,6 +16,7 @@ from app.domain.exceptions import ExtractionFailedError
 from app.domain.interfaces import OcrEngine
 from app.domain.registry import DocumentRegistry
 from app.infrastructure.config import Settings, get_settings
+from app.infrastructure.engines.classifier import HeuristicDocumentClassifier
 from app.infrastructure.engines.extractors import HybridOcrLlmExtractor
 from app.infrastructure.engines.llm_parser import OpenAICompatibleLlmParser
 from app.infrastructure.engines.ocr_paddle import PaddleOcrEngine
@@ -76,6 +77,8 @@ def create_app(
             preprocessor=preprocessor,
             strategy=strategy,
             registry=resolved_registry,
+            classifier=HeuristicDocumentClassifier(),
+            ocr_engine=application.state.ocr_engine,
         )
 
     register_exception_handlers(application)
