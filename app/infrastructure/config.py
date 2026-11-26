@@ -58,6 +58,8 @@ class OcrSettings(BaseSettings):
     enabled: bool = True
     lang: str = "id"
     use_angle_cls: bool = True
+    min_confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    model_dir: str | None = None
 
 
 class LlmSettings(BaseSettings):
