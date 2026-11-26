@@ -6,9 +6,12 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.api.error_handlers import register_exception_handlers
 from app.api.health import router as health_router
+from app.api.playground import PLAYGROUND_STATIC_DIR
+from app.api.playground import router as playground_router
 from app.api.v1.documents import router as documents_router
 from app.api.v1.extract import router as extract_router
 from app.application.pipeline import ExtractionPipeline
@@ -85,6 +88,13 @@ def create_app(
     application.include_router(health_router)
     application.include_router(documents_router)
     application.include_router(extract_router)
+    if resolved_settings.playground.enable_playground:
+        application.mount(
+            "/static/playground",
+            StaticFiles(directory=str(PLAYGROUND_STATIC_DIR)),
+            name="playground-static",
+        )
+        application.include_router(playground_router)
     return application
 
 
