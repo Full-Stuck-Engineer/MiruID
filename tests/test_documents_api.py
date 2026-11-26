@@ -18,6 +18,9 @@ def test_list_documents_default_registry_includes_idn_ktp(api_client: TestClient
     assert any(
         doc["country_code"] == "IDN" and doc["doc_type"] == "KTP" for doc in payload["documents"]
     )
+    assert any(
+        doc["country_code"] == "IDN" and doc["doc_type"] == "NPWP" for doc in payload["documents"]
+    )
 
 
 def test_list_documents_explicit_empty_registry(
