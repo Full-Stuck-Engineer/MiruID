@@ -166,9 +166,12 @@ def test_len_and_contains_normalized(
 def test_default_registry_factories_and_response_schema(
     stub_plugin_factory: Callable[..., DocumentPlugin],
 ) -> None:
-    empty_registry = create_default_registry()
-    assert len(empty_registry) == 0
-    assert register_default_plugins(empty_registry) is empty_registry
+    default_registry = create_default_registry()
+    assert ("IDN", "KTP") in default_registry
+
+    fresh_registry = DocumentRegistry()
+    assert register_default_plugins(fresh_registry) is fresh_registry
+    assert ("IDN", "KTP") in fresh_registry
 
     ktp = stub_plugin_factory("IDN", "KTP", "Indonesian KTP")
     custom_registry = create_default_registry(plugins=[ktp])
