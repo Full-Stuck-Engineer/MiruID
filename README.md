@@ -98,13 +98,9 @@ docker exec -it miruid-ollama ollama pull qwen2.5vl:7b
 
 ### Interactive Playground UI
 
-Enable the built-in web playground to test uploads and inspect structured JSON responses in your browser:
+The built-in web playground is enabled by default (`ENABLE_PLAYGROUND=true`). Open [http://localhost:8000/](http://localhost:8000/) to test uploads and inspect structured JSON responses in your browser (Swagger OpenAPI docs are at [http://localhost:8000/docs](http://localhost:8000/docs)).
 
-```dotenv
-ENABLE_PLAYGROUND=true
-```
-
-Then open [http://localhost:8000/](http://localhost:8000/) (and Swagger OpenAPI docs at [http://localhost:8000/docs](http://localhost:8000/docs)).
+Set `ENABLE_PLAYGROUND=false` to disable the playground UI (returns `404`) in locked-down production deployments.
 
 ---
 
@@ -154,7 +150,7 @@ All configuration is managed via nested Pydantic settings in [`app/infrastructur
 | `SERVICE_NAME` | `miru-id` | Service name reported by `/health` and OpenAPI title |
 | `APP_VERSION` *(or `VERSION`)* | `0.1.0` | Application version reported by `/health` |
 | `LOG_LEVEL` | `INFO` | Structured JSON log level (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`) |
-| `ENABLE_PLAYGROUND` | `false` | Mount the interactive Playground UI at `/` (`true` / `false`) |
+| `ENABLE_PLAYGROUND` | `true` | Mount the interactive Playground UI at `/` (`true` / `false`) |
 | **HTTP API** | | |
 | `API_HOST` | `0.0.0.0` | Bind host for the ASGI server |
 | `API_PORT` | `8000` | Bind port for the ASGI server |
