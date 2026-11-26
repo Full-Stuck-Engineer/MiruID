@@ -129,3 +129,18 @@ class ErrorResponse(BaseModel):
     message: str
     details: dict[str, Any] | None = None
     request_id: str | None = None
+
+
+class SupportedDocument(BaseModel):
+    """Metadata describing a registered document plugin."""
+
+    country_code: str
+    doc_type: str
+    description: str
+
+
+class SupportedDocumentsResponse(BaseModel):
+    """Response payload listing all supported document types."""
+
+    documents: list[SupportedDocument] = Field(default_factory=list)
+    total: int = Field(default=0, ge=0)

@@ -36,3 +36,7 @@ class ProviderTimeoutError(MiruDomainError):
 
 class ExtractionFailedError(MiruDomainError):
     error_code = "EXTRACTION_FAILED"
+
+
+class PluginConfigurationError(MiruDomainError):
+    error_code = "PLUGIN_CONFIGURATION_ERROR"
