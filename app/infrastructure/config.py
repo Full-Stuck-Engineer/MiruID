@@ -75,8 +75,9 @@ class LlmSettings(BaseSettings):
     base_url: str = "http://localhost:11434/v1"
     api_key: str = ""
     model: str = "qwen2.5vl:7b"
-    timeout_seconds: float = 30.0
+    timeout_seconds: float = 15.0
     max_retries: int = 2
+    temperature: float = Field(default=0.0, ge=0.0, le=2.0)
 
 
 class PlaygroundSettings(BaseSettings):
