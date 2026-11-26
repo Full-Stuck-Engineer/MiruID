@@ -2,6 +2,9 @@ services:
   miruid:
     build: .
     container_name: miruid
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
     ports:
       - "8000:8000"
     environment:
