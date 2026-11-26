@@ -18,8 +18,11 @@ class QualityMetrics(BaseModel):
 
     blur_score: float = Field(ge=0.0)
     brightness: float | None = None
+    glare_ratio: float = Field(default=0.0, ge=0.0, le=1.0)
     width: int = Field(gt=0)
     height: int = Field(gt=0)
+    is_blurry: bool = False
+    has_glare: bool = False
     is_acceptable: bool = True
 
 

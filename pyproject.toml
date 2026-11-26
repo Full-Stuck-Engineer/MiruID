@@ -7,6 +7,9 @@ license = "Apache-2.0"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.0",
+    "numpy>=2.0.0",
+    "opencv-python-headless>=4.10.0,<4.13.0",
+    "pillow>=11.0.0",
     "pydantic-settings>=2.6.0",
     "uvicorn[standard]>=0.32.0",
 ]
@@ -52,3 +55,7 @@ warn_redundant_casts = true
 disallow_untyped_defs = true
 check_untyped_defs = true
 no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = ["cv2", "cv2.*"]
+ignore_missing_imports = true
