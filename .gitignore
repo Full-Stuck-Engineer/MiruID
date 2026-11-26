@@ -221,3 +221,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Synthetic ID test dataset artifacts (never commit generated images)
+tests/synthetic_dataset/
+synthetic_dataset/
