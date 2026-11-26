@@ -1,0 +1,64 @@
+"""API tests for document discovery endpoints."""
+
+from collections.abc import Callable
+
+from fastapi.testclient import TestClient
+
+from app.domain.interfaces import DocumentPlugin
+from app.domain.registry import DocumentRegistry
+
+
+def test_list_documents_default_empty_registry(api_client: TestClient) -> None:
+    """GET /v1/documents returns empty list and total 0 with default registry."""
+    response = api_client.get("/v1/documents")
+
+    assert response.status_code == 200
+    assert response.json() == {"documents": [], "total": 0}
+
+
+def test_list_documents_populated_registry_sorted(
+    client_factory: Callable[..., TestClient],
+    stub_plugin_factory: Callable[..., DocumentPlugin],
+) -> None:
+    """GET /v1/documents returns documents sorted by (country_code, doc_type)."""
+    registry = DocumentRegistry()
+    registry.register(
+        stub_plugin_factory("SGP", "nric", "Singapore National Registration Identity Card")
+    )
+    registry.register(stub_plugin_factory("IDN", "sim", "Indonesian Driver's License"))
+    registry.register(stub_plugin_factory("IDN", "ktp", "Indonesian National Identity Card"))
+
+    client = client_factory(registry=registry)
+
+    response = client.get("/v1/documents")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "documents": [
+            {
+                "country_code": "IDN",
+                "doc_type": "KTP",
+                "description": "Indonesian National Identity Card",
+            },
+            {
+                "country_code": "IDN",
+                "doc_type": "SIM",
+                "description": "Indonesian Driver's License",
+            },
+            {
+                "country_code": "SGP",
+                "doc_type": "NRIC",
+                "description": "Singapore National Registration Identity Card",
+            },
+        ],
+        "total": 3,
+    }
+
+
+def test_openapi_schema_includes_documents_endpoint(api_client: TestClient) -> None:
+    """GET /openapi.json exposes the /v1/documents path."""
+    response = api_client.get("/openapi.json")
+
+    assert response.status_code == 200
+    schema = response.json()
+    assert "/v1/documents" in schema["paths"]
