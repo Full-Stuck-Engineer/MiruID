@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MiruID Playground</title>
+    <link rel="stylesheet" href="/static/playground/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container topbar-inner">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">M</span>
+          <div>
+            <h1>MiruID Playground</h1>
+            <p class="subtitle">Self-hosted ID document extraction &amp; validation</p>
+          </div>
+        </div>
+        <nav class="topbar-links" aria-label="API links">
+          <a href="/docs" target="_blank" rel="noopener noreferrer">OpenAPI Docs</a>
+          <a href="/health" target="_blank" rel="noopener noreferrer">Health</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container main-content" id="app-root" data-state="idle">
+      <section class="privacy-banner" role="note" aria-label="Privacy notice">
+        <span class="privacy-icon" aria-hidden="true">&#128274;</span>
+        <p>
+          <strong>Stateless In-Memory Processing:</strong> Uploaded images are processed strictly
+          in RAM with zero disk storage and zero PII logging.
+        </p>
+      </section>
+
+      <div class="workspace-grid">
+        <section class="card input-card" aria-labelledby="upload-heading">
+          <h2 id="upload-heading">1. Upload Document Image</h2>
+
+          <form id="extract-form" novalidate>
+            <div
+              id="drop-zone"
+              class="drop-zone"
+              tabindex="0"
+              role="button"
+              aria-label="Drop document image here or click to browse"
+            >
+              <input
+                id="file-input"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+              />
+              <div id="drop-placeholder" class="drop-placeholder">
+                <p class="drop-title">Drag &amp; drop an ID image here</p>
+                <p class="drop-hint">or <span class="link-text">browse files</span> &middot; JPEG, PNG, WebP</p>
+              </div>
+              <div id="preview-wrap" class="preview-wrap" hidden>
+                <img id="preview-img" alt="Selected document preview" />
+                <div class="preview-meta">
+                  <span id="file-name" class="file-name"></span>
+                  <button type="button" id="clear-file-btn" class="btn btn-ghost btn-sm">
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="country-select">Country (optional)</label>
+                <select id="country-select" name="country">
+                  <option value="">Auto-Detect</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="doc-type-select">Document Type (optional)</label>
+                <select id="doc-type-select" name="doc_type">
+                  <option value="">Auto-Detect</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="actions-row">
+              <button type="submit" id="submit-btn" class="btn btn-primary" disabled>
+                <span class="spinner" id="submit-spinner" aria-hidden="true" hidden></span>
+                <span id="submit-label">Extract Document</span>
+              </button>
+              <button type="button" id="copy-curl-btn" class="btn btn-secondary">
+                Copy curl
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card results-card" aria-labelledby="results-heading">
+          <div class="results-header">
+            <h2 id="results-heading">2. Extraction Results</h2>
+            <div class="results-actions" id="results-actions" hidden>
+              <button type="button" id="copy-json-btn" class="btn btn-secondary btn-sm">
+                Copy JSON
+              </button>
+            </div>
+          </div>
+
+          <div id="state-idle" class="state-box">
+            <p>Select an ID document image and click <strong>Extract Document</strong> to inspect structured fields, quality metrics, and validation checks.</p>
+          </div>
+
+          <div id="state-loading" class="state-box" hidden>
+            <span class="spinner spinner-lg" aria-hidden="true"></span>
+            <p>Running preprocessing, quality gate, and extraction pipeline&hellip;</p>
+          </div>
+
+          <div id="state-error" class="error-alert" role="alert" hidden>
+            <div class="error-head">
+              <span class="badge badge-danger" id="error-code">ERROR</span>
+              <span class="error-req-id" id="error-request-id"></span>
+            </div>
+            <p id="error-message" class="error-message"></p>
+          </div>
+
+          <div id="state-success" class="results-body" hidden>
+            <div class="summary-bar">
+              <div class="pill-group" id="doc-badges"></div>
+              <div class="pill-group" id="meta-badges"></div>
+            </div>
+
+            <div class="subsection">
+              <h3>Quality Gate</h3>
+              <div class="pill-group" id="quality-pills"></div>
+            </div>
+
+            <div class="subsection">
+              <div class="subsection-head">
+                <h3>Deterministic Validation Checks</h3>
+                <span id="validation-summary" class="badge"></span>
+              </div>
+              <ul id="validation-list" class="check-list"></ul>
+            </div>
+
+            <div class="subsection">
+              <h3>Extracted Fields</h3>
+              <div class="table-wrap">
+                <table class="fields-table">
+                  <thead>
+                    <tr>
+                      <th>Field</th>
+                      <th>Value</th>
+                      <th>Confidence</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fields-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <details class="raw-json-details">
+              <summary>Raw JSON Response</summary>
+              <pre id="raw-json-pre"></pre>
+            </details>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script type="module" src="/static/playground/app.js"></script>
+  </body>
+</html>
