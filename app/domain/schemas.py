@@ -103,6 +103,7 @@ class ExtractionMeta(BaseModel):
     request_id: str | None = None
     ocr_used: bool = False
     llm_used: bool = False
+    quality: QualityMetrics | None = None
 
 
 class ExtractionOutput(BaseModel):

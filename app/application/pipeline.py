@@ -122,6 +122,7 @@ class ExtractionPipeline:
             update={
                 "processing_ms": processing_ms,
                 "request_id": request_id,
+                "quality": preprocessed.quality,
             }
         )
 

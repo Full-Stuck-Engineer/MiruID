@@ -104,7 +104,7 @@ class PlaygroundSettings(BaseSettings):
         extra="ignore",
     )
 
-    enable_playground: bool = False
+    enable_playground: bool = True
 
 
 class Settings(BaseSettings):
