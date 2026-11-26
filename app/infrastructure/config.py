@@ -29,12 +29,20 @@ class QualityGateSettings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        populate_by_name=True,
     )
 
-    min_blur_score: float = 100.0
+    min_blur_score: float = Field(
+        default=100.0,
+        validation_alias=AliasChoices("BLUR_THRESHOLD", "MIN_BLUR_SCORE"),
+    )
     min_brightness: float = 40.0
     max_brightness: float = 220.0
     max_image_size_mb: int = 10
+    max_image_dim: int = Field(default=1600, gt=0)
+    glare_pixel_ratio_threshold: float = Field(default=0.05, ge=0.0, le=1.0)
+    strict_quality_gate: bool = True
+    apply_clahe: bool = True
 
 
 class OcrSettings(BaseSettings):
