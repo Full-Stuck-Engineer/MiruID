@@ -6,12 +6,14 @@ from app.domain.interfaces import DocumentPlugin
 from app.domain.registry import DocumentRegistry
 from app.plugins.idn.ktp import IndonesiaKtpPlugin
 from app.plugins.idn.npwp import IndonesiaNpwpPlugin
+from app.plugins.idn.sim import IndonesiaSimPlugin
 
 
 def register_default_plugins(registry: DocumentRegistry) -> DocumentRegistry:
     """Register built-in country/document plugins."""
     registry.register(IndonesiaKtpPlugin())
     registry.register(IndonesiaNpwpPlugin())
+    registry.register(IndonesiaSimPlugin())
     return registry
 
 

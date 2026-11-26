@@ -169,11 +169,13 @@ def test_default_registry_factories_and_response_schema(
     default_registry = create_default_registry()
     assert ("IDN", "KTP") in default_registry
     assert ("IDN", "NPWP") in default_registry
+    assert ("IDN", "SIM") in default_registry
 
     fresh_registry = DocumentRegistry()
     assert register_default_plugins(fresh_registry) is fresh_registry
     assert ("IDN", "KTP") in fresh_registry
     assert ("IDN", "NPWP") in fresh_registry
+    assert ("IDN", "SIM") in fresh_registry
 
     ktp = stub_plugin_factory("IDN", "KTP", "Indonesian KTP")
     custom_registry = create_default_registry(plugins=[ktp])
