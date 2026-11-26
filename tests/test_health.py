@@ -9,29 +9,26 @@ from fastapi.testclient import TestClient
 
 from app.infrastructure.config import Settings
 from app.infrastructure.logging import JsonFormatter, request_id_var
-from app.main import create_app
 
 
-def test_health_endpoint_returns_ok() -> None:
+def test_health_endpoint_returns_ok(
+    api_client: TestClient,
+    default_settings: Settings,
+) -> None:
     """GET /health returns 200 with service metadata."""
-    settings = Settings()
-    client = TestClient(create_app(settings))
-
-    response = client.get("/health")
+    response = api_client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {
         "status": "ok",
-        "service": settings.service_name,
-        "version": settings.version,
+        "service": default_settings.service_name,
+        "version": default_settings.version,
     }
 
 
-def test_docs_endpoint_returns_200() -> None:
+def test_docs_endpoint_returns_200(api_client: TestClient) -> None:
     """GET /docs returns 200 for OpenAPI Swagger UI."""
-    client = TestClient(create_app(Settings()))
-
-    response = client.get("/docs")
+    response = api_client.get("/docs")
 
     assert response.status_code == 200
 
@@ -77,9 +74,8 @@ def test_json_formatter_includes_request_id_and_exc_info() -> None:
                 lineno=1,
                 msg="failed %s",
                 args=("step",),
-                exc_info=True,
+                exc_info=sys.exc_info(),
             )
-            record.exc_info = sys.exc_info()
 
         formatted = formatter.format(record)
     finally:

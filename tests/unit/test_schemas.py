@@ -126,3 +126,27 @@ def test_protocol_structural_subtyping() -> None:
     ]:
         assert isinstance(stub, proto)
     assert not isinstance(object(), iface.ImagePreprocessor)
+
+
+async def test_async_protocol_stubs_auto_mode() -> None:
+    """pytest-asyncio auto mode executes async protocol stubs without explicit markers."""
+
+    class AsyncPreprocessor:
+        async def preprocess(self, image_bytes: bytes) -> sch.PreprocessedImage:
+            quality = sch.QualityMetrics(blur_score=120.0, width=640, height=480)
+            return sch.PreprocessedImage(
+                image_bytes=image_bytes, width=640, height=480, quality=quality
+            )
+
+    class AsyncOcr:
+        async def extract(self, preprocessed: sch.PreprocessedImage) -> sch.OcrResult:
+            return sch.OcrResult(raw_text=f"LEN={len(preprocessed.image_bytes)}")
+
+    preprocessor: iface.ImagePreprocessor = AsyncPreprocessor()
+    ocr: iface.OcrEngine = AsyncOcr()
+
+    preprocessed = await preprocessor.preprocess(b"fake-image-bytes")
+    ocr_result = await ocr.extract(preprocessed)
+
+    assert preprocessed.width == 640
+    assert ocr_result.raw_text == "LEN=16"
