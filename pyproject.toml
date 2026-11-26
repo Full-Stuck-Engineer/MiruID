@@ -24,6 +24,7 @@ ocr = [
 
 [dependency-groups]
 dev = [
+    "faker>=30.0.0",
     "httpx>=0.28.0",
     "mypy>=1.13.0",
     "pytest>=8.3.0",
@@ -58,6 +59,7 @@ markers = [
 
 [tool.mypy]
 python_version = "3.12"
+explicit_package_bases = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 disallow_untyped_defs = true
