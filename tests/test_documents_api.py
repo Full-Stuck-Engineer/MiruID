@@ -9,7 +9,7 @@ from app.domain.registry import DocumentRegistry
 
 
 def test_list_documents_default_registry_includes_idn_plugins(api_client: TestClient) -> None:
-    """GET /v1/documents returns built-in plugins including IDN/KTP and IDN/SIM."""
+    """GET /v1/documents returns built-in plugins including IDN KTP, NPWP, and SIM."""
     response = api_client.get("/v1/documents")
 
     assert response.status_code == 200
@@ -17,6 +17,7 @@ def test_list_documents_default_registry_includes_idn_plugins(api_client: TestCl
     assert payload["total"] == len(payload["documents"])
     registered = {(doc["country_code"], doc["doc_type"]) for doc in payload["documents"]}
     assert ("IDN", "KTP") in registered
+    assert ("IDN", "NPWP") in registered
     assert ("IDN", "SIM") in registered
 
 
