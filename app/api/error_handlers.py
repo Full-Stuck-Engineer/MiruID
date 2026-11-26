@@ -40,7 +40,7 @@ def _status_code_for_domain_error(exc: MiruDomainError) -> int:
     """Return the HTTP status code for a domain exception using its MRO."""
     for cls in type(exc).__mro__:
         if cls in _DOMAIN_ERROR_STATUS_MAP:
-            return _DOMAIN_ERROR_STATUS_MAP[cls]  # type: ignore[index]
+            return _DOMAIN_ERROR_STATUS_MAP[cls]
     return status.HTTP_500_INTERNAL_SERVER_ERROR
 
 

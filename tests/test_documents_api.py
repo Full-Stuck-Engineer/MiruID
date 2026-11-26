@@ -1,59 +1,34 @@
 """API tests for document discovery endpoints."""
 
-from collections.abc import Sequence
+from collections.abc import Callable
 
 from fastapi.testclient import TestClient
-from pydantic import BaseModel
 
+from app.domain.interfaces import DocumentPlugin
 from app.domain.registry import DocumentRegistry
-from app.domain.schemas import ClassificationRule, OcrResult, ValidationResult
-from app.infrastructure.config import Settings
-from app.main import create_app
 
 
-class _StubSchema(BaseModel):
-    value: str = ""
-
-
-class _StubPlugin:
-    """Minimal DocumentPlugin implementation for API wiring tests."""
-
-    schema_model: type[BaseModel] = _StubSchema
-    classification_rules: Sequence[ClassificationRule] = ()
-
-    def __init__(self, country_code: str, doc_type: str, description: str) -> None:
-        self.country_code = country_code
-        self.doc_type = doc_type
-        self.description = description
-
-    def build_prompt(self, ocr_result: OcrResult | None = None) -> str:
-        return ""
-
-    def validate(self, data: BaseModel) -> ValidationResult:
-        return ValidationResult(is_valid=True)
-
-    def offline_parse(self, ocr_result: OcrResult) -> BaseModel:
-        return _StubSchema()
-
-
-def test_list_documents_default_empty_registry() -> None:
+def test_list_documents_default_empty_registry(api_client: TestClient) -> None:
     """GET /v1/documents returns empty list and total 0 with default registry."""
-    client = TestClient(create_app(Settings()))
-
-    response = client.get("/v1/documents")
+    response = api_client.get("/v1/documents")
 
     assert response.status_code == 200
     assert response.json() == {"documents": [], "total": 0}
 
 
-def test_list_documents_populated_registry_sorted() -> None:
+def test_list_documents_populated_registry_sorted(
+    client_factory: Callable[..., TestClient],
+    stub_plugin_factory: Callable[..., DocumentPlugin],
+) -> None:
     """GET /v1/documents returns documents sorted by (country_code, doc_type)."""
     registry = DocumentRegistry()
-    registry.register(_StubPlugin("SGP", "nric", "Singapore National Registration Identity Card"))
-    registry.register(_StubPlugin("IDN", "sim", "Indonesian Driver's License"))
-    registry.register(_StubPlugin("IDN", "ktp", "Indonesian National Identity Card"))
+    registry.register(
+        stub_plugin_factory("SGP", "nric", "Singapore National Registration Identity Card")
+    )
+    registry.register(stub_plugin_factory("IDN", "sim", "Indonesian Driver's License"))
+    registry.register(stub_plugin_factory("IDN", "ktp", "Indonesian National Identity Card"))
 
-    client = TestClient(create_app(Settings(), registry=registry))
+    client = client_factory(registry=registry)
 
     response = client.get("/v1/documents")
 
@@ -80,11 +55,9 @@ def test_list_documents_populated_registry_sorted() -> None:
     }
 
 
-def test_openapi_schema_includes_documents_endpoint() -> None:
+def test_openapi_schema_includes_documents_endpoint(api_client: TestClient) -> None:
     """GET /openapi.json exposes the /v1/documents path."""
-    client = TestClient(create_app(Settings()))
-
-    response = client.get("/openapi.json")
+    response = api_client.get("/openapi.json")
 
     assert response.status_code == 200
     schema = response.json()

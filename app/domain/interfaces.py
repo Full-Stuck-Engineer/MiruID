@@ -51,7 +51,9 @@ class DocumentPlugin(Protocol):
     doc_type: str
     description: str
     schema_model: type[BaseModel]
-    classification_rules: Sequence[ClassificationRule]
+
+    @property
+    def classification_rules(self) -> Sequence[ClassificationRule]: ...
 
     def build_prompt(self, ocr_result: OcrResult | None = None) -> str: ...
 
