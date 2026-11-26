@@ -8,9 +8,24 @@ from app.domain.interfaces import DocumentPlugin
 from app.domain.registry import DocumentRegistry
 
 
-def test_list_documents_default_empty_registry(api_client: TestClient) -> None:
-    """GET /v1/documents returns empty list and total 0 with default registry."""
+def test_list_documents_default_registry_includes_idn_ktp(api_client: TestClient) -> None:
+    """GET /v1/documents returns built-in plugins including IDN/KTP with default registry."""
     response = api_client.get("/v1/documents")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] == len(payload["documents"])
+    assert any(
+        doc["country_code"] == "IDN" and doc["doc_type"] == "KTP" for doc in payload["documents"]
+    )
+
+
+def test_list_documents_explicit_empty_registry(
+    client_factory: Callable[..., TestClient],
+) -> None:
+    """GET /v1/documents returns empty list and total 0 when given an empty registry."""
+    client = client_factory(registry=DocumentRegistry())
+    response = client.get("/v1/documents")
 
     assert response.status_code == 200
     assert response.json() == {"documents": [], "total": 0}

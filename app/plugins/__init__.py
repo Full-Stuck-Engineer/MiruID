@@ -4,10 +4,12 @@ from collections.abc import Iterable
 
 from app.domain.interfaces import DocumentPlugin
 from app.domain.registry import DocumentRegistry
+from app.plugins.idn.ktp import IndonesiaKtpPlugin
 
 
 def register_default_plugins(registry: DocumentRegistry) -> DocumentRegistry:
-    """Register built-in country/document plugins (placeholder for IDN-01..03)."""
+    """Register built-in country/document plugins."""
+    registry.register(IndonesiaKtpPlugin())
     return registry
 
 
