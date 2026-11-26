@@ -1,5 +1,6 @@
 """Extraction engine adapters (OCR, Vision-LLM, Hybrid)."""
 
+from app.infrastructure.engines.extractors import HybridOcrLlmExtractor
 from app.infrastructure.engines.llm_parser import (
     BASE_SYSTEM_PROMPT,
     OpenAICompatibleLlmParser,
@@ -8,6 +9,7 @@ from app.infrastructure.engines.llm_parser import (
 
 __all__ = [
     "BASE_SYSTEM_PROMPT",
+    "HybridOcrLlmExtractor",
     "OpenAICompatibleLlmParser",
     "format_ocr_prompt",
 ]

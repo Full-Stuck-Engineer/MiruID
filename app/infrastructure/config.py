@@ -14,11 +14,25 @@ class ApiSettings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        populate_by_name=True,
     )
 
     host: str = "0.0.0.0"
     port: int = 8000
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
+    max_upload_size_mb: int = Field(
+        default=10,
+        gt=0,
+        validation_alias=AliasChoices("MAX_UPLOAD_SIZE_MB", "API_MAX_UPLOAD_SIZE_MB"),
+    )
+    allowed_mime_types: list[str] = Field(
+        default_factory=lambda: ["image/jpeg", "image/png", "image/webp"],
+        validation_alias=AliasChoices("ALLOWED_MIME_TYPES", "API_ALLOWED_MIME_TYPES"),
+    )
+    extraction_mode: str = Field(
+        default="hybrid",
+        validation_alias=AliasChoices("EXTRACTION_MODE", "API_EXTRACTION_MODE"),
+    )
 
 
 class QualityGateSettings(BaseSettings):

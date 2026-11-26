@@ -29,7 +29,10 @@ _DOMAIN_ERROR_STATUS_MAP: dict[type[MiruDomainError], int] = {
 
 
 def _resolve_request_id(request: Request) -> str | None:
-    """Resolve request_id from contextvar with X-Request-ID header fallback."""
+    """Resolve request_id from request.state, contextvar, or X-Request-ID header."""
+    state_request_id: str | None = getattr(request.state, "request_id", None)
+    if state_request_id is not None:
+        return state_request_id
     ctx_request_id = request_id_var.get()
     if ctx_request_id is not None:
         return ctx_request_id
